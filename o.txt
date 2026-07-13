@@ -1,0 +1,103 @@
+def maior_substring_exemplar(s: str) -> str:
+    # Função auxiliar recursiva que aplica a Divisão e Conquista
+    def solve(texto: str) -> str:
+        if len(texto) < 2:
+            return ""
+        
+        # Cria um conjunto (set) com os caracteres para busca O(1)
+        caracteres = set(texto)
+        
+        for i, c in enumerate(texto):
+            # Se o caractere atual não tem seu par na string
+            if c.lower() not in caracteres or c.upper() not in caracteres:
+                # Divide a string em duas metades (ignorando o caractere problemático)
+                esquerda = solve(texto[:i])
+                direita = solve(texto[i+1:])
+                
+                # Retorna a maior. Se houver empate, a esquerda ganha (primeira ocorrência)
+                return direita if len(direita) > len(esquerda) else esquerda
+                
+        # Se todos os caracteres possuem seus pares, a própria string é exemplar
+        return texto
+
+    # Chama a recursão principal
+    resultado = solve(s)
+    
+    # Retorna o resultado ou "0" caso seja vazio
+    return resultado if resultado else "0"
+
+# --- Testando os Exemplos ---
+print(maior_substring_exemplar("YazaAay")) # Saída: aAa
+print(maior_substring_exemplar("Bb"))      # Saída: Bb
+print(maior_substring_exemplar("c"))       # Saída: 0
+
+
+
+# Python Solution
+
+def climb_stairs(n: int) -> int:
+    if n <= 2:
+        return n
+    
+    prev1, prev2 = 1, 2
+    
+    for _ in range(3, n + 1):
+        current = prev1 + prev2
+        prev1 = prev2
+        prev2 = current
+        
+    return prev2
+
+# Example usage:
+# print(climb_stairs(2)) # Output: 2
+# print(climb_stairs(3)) # Output: 3
+
+
+
+precos = list(map(int, input().split()))
+
+menor_preco = precos[0]
+maior_lucro = 0
+
+for preco in precos[1:]:
+    if preco < menor_preco:
+        menor_preco = preco
+    else:
+        maior_lucro = max(maior_lucro, preco - menor_preco)
+
+print(maior_lucro)
+
+
+A. Qual é a moda?
+Divisão e Conquista
+Enunciado
+
+Dado uma sequência numsde tamanho n, retorne o número que está "na moda".
+O número que está "na moda" é o elemento da sequência que aparece mais que n/2vezes, toda entrada vai ter um número "na moda".
+Limitações:
+
+    n == nums.length
+    1 <= n <= 5 * 10^4
+    -10^9 <= nums[i] <= 10^9
+
+Exemplos
+
+Exemplo 1:
+
+Entrada:
+
+3 2 3
+
+Saída:
+
+3
+
+Exemplo 2:
+
+Entrada:
+
+2 2 1 1 1 2 2
+
+Saída:
+
+2

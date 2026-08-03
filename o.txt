@@ -1,103 +1,213 @@
-def maior_substring_exemplar(s: str) -> str:
-    # Função auxiliar recursiva que aplica a Divisão e Conquista
-    def solve(texto: str) -> str:
-        if len(texto) < 2:
-            return ""
-        
-        # Cria um conjunto (set) com os caracteres para busca O(1)
-        caracteres = set(texto)
-        
-        for i, c in enumerate(texto):
-            # Se o caractere atual não tem seu par na string
-            if c.lower() not in caracteres or c.upper() not in caracteres:
-                # Divide a string em duas metades (ignorando o caractere problemático)
-                esquerda = solve(texto[:i])
-                direita = solve(texto[i+1:])
-                
-                # Retorna a maior. Se houver empate, a esquerda ganha (primeira ocorrência)
-                return direita if len(direita) > len(esquerda) else esquerda
-                
-        # Se todos os caracteres possuem seus pares, a própria string é exemplar
-        return texto
+1.
 
-    # Chama a recursão principal
-    resultado = solve(s)
-    
-    # Retorna o resultado ou "0" caso seja vazio
-    return resultado if resultado else "0"
+import sys
 
-# --- Testando os Exemplos ---
-print(maior_substring_exemplar("YazaAay")) # Saída: aAa
-print(maior_substring_exemplar("Bb"))      # Saída: Bb
-print(maior_substring_exemplar("c"))       # Saída: 0
+sys.setrecursionlimit(10**7)
+input = sys.stdin.readline
 
 
+class DSU:
+    def __init__(self, n: int):
+        self.parent = list(range(n + 1))
+        self.size = [1] * (n + 1)
 
-# Python Solution
+    def find(self, x: int) -> int:
+        while self.parent[x] != x:
+            self.parent[x] = self.parent[self.parent[x]]
+            x = self.parent[x]
+        return x
 
-def climb_stairs(n: int) -> int:
-    if n <= 2:
-        return n
-    
-    prev1, prev2 = 1, 2
-    
-    for _ in range(3, n + 1):
-        current = prev1 + prev2
-        prev1 = prev2
-        prev2 = current
-        
-    return prev2
-
-# Example usage:
-# print(climb_stairs(2)) # Output: 2
-# print(climb_stairs(3)) # Output: 3
+    def union(self, a: int, b: int) -> bool:
+        a = self.find(a)
+        b = self.find(b)
+        if a == b:
+            return False
+        if self.size[a] < self.size[b]:
+            a, b = b, a
+        self.parent[b] = a
+        self.size[a] += self.size[b]
+        return True
 
 
+def main():
+    n = int(input())
+    dsu = DSU(n)
 
-precos = list(map(int, input().split()))
+    extra = []  # arestas redundantes (fecharemos essas)
+    edges = []
 
-menor_preco = precos[0]
-maior_lucro = 0
+    for _ in range(n - 1):
+        a, b = map(int, input().split())
+        edges.append((a, b))
+        if not dsu.union(a, b):
+            extra.append((a, b))
 
-for preco in precos[1:]:
-    if preco < menor_preco:
-        menor_preco = preco
+    # representantes de cada componente
+    reps = []
+    seen = set()
+    for v in range(1, n + 1):
+        r = dsu.find(v)
+        if r not in seen:
+            seen.add(r)
+            reps.append(v)
+
+    # Se há k componentes, há k-1 arestas extras
+    t = len(extra)
+    print(t)
+    for i in range(t):
+        a, b = extra[i]
+        u = reps[i]
+        v = reps[i + 1]
+        print(a, b, u, v)
+
+
+if __name__ == "__main__":
+    main()
+
+2.
+
+import sys
+import heapq
+
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    if not data:
+        return
+
+    it = iter(data)
+    n = int(next(it))
+    m = int(next(it))
+
+    alturas = [[int(next(it)) for _ in range(m)] for _ in range(n)]
+
+    # dist[i][j] = menor esforço conhecido para chegar em (i, j)
+    INF = 10**18
+    dist = [[INF] * m for _ in range(n)]
+    dist[0][0] = 0
+
+    pq = [(0, 0, 0)]  # (esforço atual, linha, coluna)
+    dirs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+
+    while pq:
+        esforco, x, y = heapq.heappop(pq)
+
+        if esforco != dist[x][y]:
+            continue
+
+        if x == n - 1 and y == m - 1:
+            print(esforco)
+            return
+
+        h = alturas[x][y]
+
+        for dx, dy in dirs:
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < n and 0 <= ny < m:
+                custo_aresta = abs(h - alturas[nx][ny])
+                novo_esforco = max(esforco, custo_aresta)
+
+                if novo_esforco < dist[nx][ny]:
+                    dist[nx][ny] = novo_esforco
+                    heapq.heappush(pq, (novo_esforco, nx, ny))
+
+
+if __name__ == "__main__":
+    solve()
+
+3.
+
+import sys
+from collections import deque
+
+def main():
+    input = sys.stdin.readline
+    n, m = map(int, input().split())
+
+    grafo = [[] for _ in range(n)]
+    indeg = [0] * n
+
+    for _ in range(m):
+        a, b = map(int, input().split())
+        grafo[b].append(a)   # b -> a
+        indeg[a] += 1
+
+    fila = deque(i for i in range(n) if indeg[i] == 0)
+    ordem = []
+
+    while fila:
+        u = fila.popleft()
+        ordem.append(u)
+
+        for v in grafo[u]:
+            indeg[v] -= 1
+            if indeg[v] == 0:
+                fila.append(v)
+
+    if len(ordem) != n:
+        print("Impossivel")
     else:
-        maior_lucro = max(maior_lucro, preco - menor_preco)
+        print(*ordem)
 
-print(maior_lucro)
+if __name__ == "__main__":
+    main()
+
+4.
+
+from collections import deque
+import sys
 
 
-A. Qual é a moda?
-Divisão e Conquista
-Enunciado
+def orangesRotting():
+    input_data = sys.stdin.read().split()
+    if not input_data:
+        return
 
-Dado uma sequência numsde tamanho n, retorne o número que está "na moda".
-O número que está "na moda" é o elemento da sequência que aparece mais que n/2vezes, toda entrada vai ter um número "na moda".
-Limitações:
+    m = int(input_data[0])
+    n = int(input_data[1])
 
-    n == nums.length
-    1 <= n <= 5 * 10^4
-    -10^9 <= nums[i] <= 10^9
+    grid = []
+    idx = 2
+    for _ in range(m):
+        row = []
+        for _ in range(n):
+            row.append(int(input_data[idx]))
+            idx += 1
+        grid.append(row)
 
-Exemplos
+    queue = deque()
+    fresh_count = 0
 
-Exemplo 1:
+    for r in range(m):
+        for c in range(n):
+            if grid[r][c] == 2:
+                queue.append((r, c, 0))
+            elif grid[r][c] == 1:
+                fresh_count += 1
 
-Entrada:
+    if fresh_count == 0:
+        print(0)
+        return
 
-3 2 3
+    minutes = 0
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
-Saída:
+    while queue:
+        r, c, t = queue.popleft()
+        minutes = max(minutes, t)
 
-3
+        for dr, dc in directions:
+            nr, nc = r + dr, c + dc
+            if 0 <= nr < m and 0 <= nc < n and grid[nr][nc] == 1:
+                grid[nr][nc] = 2
+                fresh_count -= 1
+                queue.append((nr, nc, t + 1))
 
-Exemplo 2:
+    if fresh_count == 0:
+        print(minutes)
+    else:
+        print(-1)
 
-Entrada:
 
-2 2 1 1 1 2 2
-
-Saída:
-
-2
+if __name__ == "__main__":
+    orangesRotting()
